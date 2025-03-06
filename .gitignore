@@ -1,0 +1,46 @@
+# Nuxt dev/build outputs
+.output
+.data
+.nuxt
+.nitro
+.cache
+dist
+
+# Node dependencies
+node_modules
+
+# Logs
+logs
+*.log
+yarn-debug.log*
+yarn-error.log*
+
+# Misc
+.DS_Store
+.fleet
+.idea
+.vscode/
+
+# Local env files
+.env
+.env.*
+!.env.example
+
+
+# Python
+__pycache__/
+
+*.py[cod]
+*$py.class
+*.sqlite3
+*.map
+*.rdb
+*.local
+*.tmp
+
+env/
+media/
+
+*.local
+
+*.toml

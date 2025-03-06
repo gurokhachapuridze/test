@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import styled, { createGlobalStyle } from 'styled-components';
 import { FiAlertCircle } from 'react-icons/fi';
 
@@ -160,9 +160,7 @@ const LoginPage: React.FC = () => {
         <div>
           <p>
             Don't have an account?{' '}
-            <a href="/register" style={{ color: '#4caf50', fontWeight: 500 }}>
-              Register here
-            </a>
+            <Link to="/register" style={{ color: '#4caf50', fontWeight: 500 }}>Register here</Link>
           </p>
         </div>
       </FormWrapper>

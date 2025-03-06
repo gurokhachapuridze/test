@@ -3,11 +3,18 @@ import ImgCard from '../components/common/ImgCard';
 
 const API_KEY = '49188160-23cddb5b6244faf9ff6c18141';
 
-function homePage() {
-	const [searchTerm, setSearchTerm] = useState('');
-	const [images, setImages] = useState([]);
-	const [isLoading, setIsLoading] = useState(false);
-	const [error, setError] = useState(null);
+type ImageType = {
+	id: number;
+	webformatURL: string;
+	tags: string;
+	user: string;
+};
+
+const HomePage: React.FC = () => {
+	const [searchTerm, setSearchTerm] = useState<string>('');
+	const [images, setImages] = useState<ImageType[]>([]);
+	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -31,7 +38,7 @@ function homePage() {
 				const data = await response.json();
 				setImages(data.hits);
 			} catch (err) {
-				setError(err);
+				setError((err as Error).message);
 			} finally {
 				setIsLoading(false);
 			}
@@ -40,12 +47,14 @@ function homePage() {
 		fetchData();
 	}, [searchTerm]);
 
-	const handleSearch = (e) => {
+	const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setSearchTerm(e.target.value);
 	};
 
 	return (
 		<div className='container mx-auto p-4'>
+			<h1 className='text-3xl font-bold mb-6'>Pixabay Image Search</h1>
+
 			<input
 				type='text'
 				placeholder='Search images...'
@@ -54,11 +63,11 @@ function homePage() {
 				className='border rounded p-2 w-full mb-4'
 			/>
 
-			{isLoading && <p>Loading...</p>}
-			{error && <p>Error: {error.message}</p>}
+			{isLoading && <p className='text-center py-4'>Loading...</p>}
+			{error && <p className='text-center text-red-500 py-4'>Error: {error}</p>}
 
 			{images.length > 0 && (
-				<div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+				<div className='grid grid-cols-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
 					{images.map((image) => (
 						<ImgCard key={image.id} image={image} />
 					))}
@@ -66,9 +75,16 @@ function homePage() {
 			)}
 
 			{images.length === 0 && searchTerm.length > 0 && !isLoading && !error && (
-				<p>No results found.</p>
+				<p className='text-center py-4'>No results found.</p>
+			)}
+
+			{searchTerm.length === 0 && !isLoading && (
+				<div className='text-center py-8 text-gray-600'>
+					<p>Enter a search term to find images</p>
+				</div>
 			)}
 		</div>
 	);
-}
-export default homePage;
+};
+
+export default HomePage;

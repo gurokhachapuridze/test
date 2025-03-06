@@ -1,22 +1,30 @@
-function ImgCard({ image }) {
+import React from 'react';
+import { Link } from 'react-router-dom';
+
+type ImageProps = {
+	image: {
+		id: number;
+		webformatURL: string;
+		tags: string;
+		user: string;
+	};
+};
+
+const ImgCard: React.FC<ImageProps> = ({ image }) => {
 	return (
-		<div className='border rounded overflow-hidden shadow-md'>
-			<a href={image.webformatURL} target='_blank' rel='noopener noreferrer'>
+		<div className='border rounded overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300'>
+			<Link to={`/image/${image.id}`}>
 				<img
 					src={image.webformatURL}
 					alt={image.tags}
-					className='w-full h-auto object-cover aspect-video'
+					className='w-full h-[200px] object-cover aspect-video'
 				/>
-			</a>
-			<div className='p-4'>
-				<p className='font-semibold'>{image.user}</p>
-				<p className='text-sm text-gray-600'>Tags: {image.tags}</p>
-				<p className='text-sm text-gray-600'>
-					Resolution: {image.imageWidth}x{image.imageHeight}
-				</p>
-			</div>
+				<div className='p-4'>
+					<p className='font-semibold'>{image.user}</p>
+				</div>
+			</Link>
 		</div>
 	);
-}
+};
 
 export default ImgCard;

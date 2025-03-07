@@ -140,12 +140,13 @@ const RegistrationPage: React.FC = () => {
 		if (!errors.email && !errors.password && !errors.age) {
 			// Simulate successful registration
 			try {
-				const response = await axios.post('/api/register', {
-					email,
-					password,
-					age,
-				});
-				console.log(response, 'response');
+				const response = await fetch('/api/register', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ email, password, age }),
+				  });
+				  const data = await response.json();
+				console.log(data, 'response');
 				navigate('/home');
 			} catch (err: any) {
 				// setError('root', {

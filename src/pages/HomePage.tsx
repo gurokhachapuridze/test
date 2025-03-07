@@ -1,86 +1,145 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import ImgCard from '../components/common/ImgCard';
-
-const API_KEY = '49188160-23cddb5b6244faf9ff6c18141';
-
-type ImageType = {
-	id: number;
-	webformatURL: string;
-	tags: string;
-	user: string;
-};
+import { AiOutlineSearch } from 'react-icons/ai';
+import { ClipLoader } from 'react-spinners';
+import { useImageContext } from '../contexts/ImageContext';
 
 const HomePage: React.FC = () => {
-	const [searchTerm, setSearchTerm] = useState<string>('');
-	const [images, setImages] = useState<ImageType[]>([]);
-	const [isLoading, setIsLoading] = useState<boolean>(false);
-	const [error, setError] = useState<string | null>(null);
+	const {
+		searchTerm,
+		setSearchTerm,
+		images,
+		isLoading,
+		error,
+		fetchImages,
+		page,
+		setPage,
+	} = useImageContext();
+
+	const [hasError, setHasError] = useState<boolean>(false);
 
 	useEffect(() => {
-		const fetchData = async () => {
-			if (searchTerm.length === 0) {
-				setImages([]);
-				return;
-			}
-
-			setIsLoading(true);
-			setError(null);
-
-			try {
-				const response = await fetch(
-					`https://pixabay.com/api/?key=${API_KEY}&q=${searchTerm}&image_type=photo&pretty=true`
-				);
-
-				if (!response.ok) {
-					throw new Error('Network response was not ok');
+		const debounceTimeout = setTimeout(() => {
+			setPage(1);
+			setHasError(false);
+			const fetchData = async () => {
+				try {
+					await fetchImages();
+				} catch (e) {
+					setHasError(true);
 				}
-
-				const data = await response.json();
-				setImages(data.hits);
-			} catch (err) {
-				setError((err as Error).message);
-			} finally {
-				setIsLoading(false);
-			}
-		};
-
-		fetchData();
+			};
+			fetchData();
+		}, 500);
+		return () => clearTimeout(debounceTimeout);
 	}, [searchTerm]);
+
+	const handleScroll = useCallback(() => {
+		if (
+			window.innerHeight + window.scrollY >= document.body.offsetHeight - 200 && // 200px before bottom
+			!isLoading
+		) {
+			setPage((prevPage: number) => prevPage + 1);
+		}
+	}, [isLoading, setPage]);
+
+	useEffect(() => {
+		window.addEventListener('scroll', handleScroll);
+		return () => window.removeEventListener('scroll', handleScroll);
+	}, [handleScroll]);
+
+	useEffect(() => {
+		if (page > 1) {
+			const fetchData = async () => {
+				try {
+					await fetchImages();
+				} catch (e) {
+					setHasError(true);
+				}
+			};
+			fetchData();
+		}
+	}, [page]);
 
 	const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setSearchTerm(e.target.value);
 	};
 
+	const handleRetry = () => {
+		setSearchTerm('');
+		setHasError(false);
+		const fetchData = async () => {
+			try {
+				await fetchImages();
+			} catch (e) {
+				setHasError(true);
+			}
+		};
+		fetchData();
+	};
+
 	return (
 		<div className='container mx-auto p-4'>
-			<h1 className='text-3xl font-bold mb-6'>Pixabay Image Search</h1>
+			<h1 className='text-3xl font-bold text-center mb-6'>
+				Pixabay Image Search
+			</h1>
 
-			<input
-				type='text'
-				placeholder='Search images...'
-				value={searchTerm}
-				onChange={handleSearch}
-				className='border rounded p-2 w-full mb-4'
-			/>
+			<div className='relative w-full max-w-lg mx-auto mb-6'>
+				<input
+					type='text'
+					placeholder='Search images...'
+					value={searchTerm}
+					onChange={handleSearch}
+					className='border rounded p-2 w-full pr-10'
+				/>
+				<AiOutlineSearch
+					className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500'
+					size={20}
+				/>
+			</div>
 
-			{isLoading && <p className='text-center py-4'>Loading...</p>}
-			{error && <p className='text-center text-red-500 py-4'>Error: {error}</p>}
+			{isLoading && page === 1 && (
+				<div className='text-center py-4'>
+					<ClipLoader size={35} color='#3498db' />
+				</div>
+			)}
+
+			{hasError && (
+				<div className='text-center text-red-500 py-4'>
+					<p>Error: Something went wrong. Please try again.</p>
+					<button
+						onClick={handleRetry}
+						className='mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition'
+					>
+						Retry
+					</button>
+				</div>
+			)}
 
 			{images.length > 0 && (
-				<div className='grid grid-cols-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
+				<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
 					{images.map((image) => (
-						<ImgCard key={image.id} image={image} />
+						<ImgCard key={`${image.id}-${Math.random()}`} image={image} />
 					))}
 				</div>
 			)}
 
-			{images.length === 0 && searchTerm.length > 0 && !isLoading && !error && (
-				<p className='text-center py-4'>No results found.</p>
+
+			{images.length === 0 && searchTerm.trim() && !isLoading && !hasError && (
+				<p className='text-center py-4 text-gray-600'>No results found.</p>
 			)}
 
-			{searchTerm.length === 0 && !isLoading && (
-				<div className='text-center py-8 text-gray-600'>
+
+			{!searchTerm.trim() && !isLoading && !hasError && (
+				<div className='text-center py-8 text-gray-500'>
 					<p>Enter a search term to find images</p>
+				</div>
+			)}
+
+
+			{isLoading && page > 1 && (
+				<div className='text-center py-4'>
+					<ClipLoader size={35} color='#3498db' />
 				</div>
 			)}
 		</div>

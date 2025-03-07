@@ -17,7 +17,7 @@ type DetailedImageType = {
 	views: number;
 	likes: number;
 	comments: number;
-	favorites: number;
+	collections: number;
 	downloads: number;
 };
 
@@ -38,7 +38,9 @@ const ImageDetailPage: React.FC = () => {
 				);
 
 				if (!response.ok) {
-					throw new Error('Failed to fetch image details');
+					throw new Error(
+						`Failed to fetch image details. Status: ${response.status}`
+					);
 				}
 
 				const data = await response.json();
@@ -48,7 +50,11 @@ const ImageDetailPage: React.FC = () => {
 					throw new Error('Image not found');
 				}
 			} catch (err) {
-				setError((err as Error).message);
+				if (err instanceof Error) {
+					setError(`Error: ${err.message}`);
+				} else {
+					setError('An unknown error occurred');
+				}
 			} finally {
 				setIsLoading(false);
 			}
@@ -56,6 +62,9 @@ const ImageDetailPage: React.FC = () => {
 
 		if (id) {
 			fetchImageDetails();
+		} else {
+			setError('Invalid image ID');
+			setIsLoading(false);
 		}
 	}, [id]);
 
@@ -65,56 +74,60 @@ const ImageDetailPage: React.FC = () => {
 		else return (bytes / 1048576).toFixed(2) + ' MB';
 	};
 
-	if (isLoading)
+	if (isLoading) {
 		return (
-			<div className='container mx-auto p-4 text-center text-xl text-gray-600'>
+			<div className='container mx-auto p-4 text-center text-xl text-gray-600 dark:text-gray-300'>
 				Loading...
 			</div>
 		);
-	if (error)
+	}
+
+	if (error) {
 		return (
-			<div className='container mx-auto p-4 text-center text-red-600'>
-				<p className='font-semibold'>Error: {error}</p>
+			<div className='container mx-auto p-4 text-center text-red-600 dark:text-red-400'>
+				<p className='font-semibold'>{error}</p>
 			</div>
 		);
-	if (!image)
+	}
+
+	if (!image) {
 		return (
-			<div className='container mx-auto p-4 text-center text-lg text-gray-700'>
+			<div className='container mx-auto p-4 text-center text-lg text-gray-700 dark:text-gray-300'>
 				Image not found
 			</div>
 		);
+	}
 
 	return (
 		<div className='container mx-auto p-6 max-w-4xl'>
-			<div className='bg-white rounded-lg shadow-xl overflow-hidden'>
-				{/* Section 1: Image Information */}
+			<div className='bg-white dark:bg-gray-900 rounded-lg shadow-xl overflow-hidden'>
 				<div className='mb-6'>
 					<div className='flex justify-center'>
 						<img
 							src={image.largeImageURL}
 							alt={image.tags}
-							className='max-w-full h-auto rounded-lg shadow-lg border-4 border-gray-100'
+							className='max-w-full h-auto rounded-lg shadow-lg border-4 border-gray-100 dark:border-gray-800'
 						/>
 					</div>
 					<div className='p-6'>
-						<h2 className='text-3xl font-bold mb-4 text-gray-800'>
+						<h2 className='text-3xl font-bold mb-4 text-gray-800 dark:text-gray-200'>
 							Image Information
 						</h2>
 						<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
 							<div>
-								<p className='text-lg'>
-									<span className='font-semibold text-gray-700'>Size: </span>
+								<p className='text-lg text-gray-700 dark:text-gray-300'>
+									<span className='font-semibold'>Size: </span>
 									{image.imageWidth} x {image.imageHeight} px (
 									{formatFileSize(image.imageSize)})
 								</p>
-								<p className='text-lg'>
-									<span className='font-semibold text-gray-700'>Type: </span>
+								<p className='text-lg text-gray-700 dark:text-gray-300'>
+									<span className='font-semibold'>Type: </span>
 									{image.type}
 								</p>
 							</div>
 							<div>
-								<p className='text-lg'>
-									<span className='font-semibold text-gray-700'>Tags: </span>
+								<p className='text-lg text-gray-700 dark:text-gray-300'>
+									<span className='font-semibold'>Tags: </span>
 									{image.tags
 										.split(',')
 										.map((tag) => tag.trim())
@@ -125,9 +138,9 @@ const ImageDetailPage: React.FC = () => {
 					</div>
 				</div>
 
-				{/* Section 2: User & Engagement Metrics */}
-				<div className='bg-gray-50 p-6'>
-					<h2 className='text-3xl font-bold mb-6 text-gray-800'>
+
+				<div className='bg-gray-50 dark:bg-gray-800 p-3'>
+					<h2 className='text-3xl font-bold mb-6 text-gray-800 dark:text-gray-200'>
 						User & Engagement Metrics
 					</h2>
 					<div className='flex items-center mb-6'>
@@ -135,44 +148,39 @@ const ImageDetailPage: React.FC = () => {
 							<img
 								src={image.userImageURL}
 								alt={image.user}
-								className='w-16 h-16 rounded-full mr-6 border-2 border-gray-300'
+								className='w-16 h-16 rounded-full mr-6 border-2 border-gray-300 dark:border-gray-700'
 							/>
 						)}
-						<div className='bg-white p-6 rounded-lg shadow-md'>
-							<p className='text-gray-600 text-sm'>Uploaded by</p>
-							<p className='text-xl font-semibold text-gray-800'>
+						<div className='bg-white dark:bg-gray-900 p-6 rounded-lg shadow-md'>
+							<p className='text-gray-600 dark:text-gray-400 text-sm'>
+								Uploaded by
+							</p>
+							<p className='text-xl font-semibold text-gray-800 dark:text-gray-200'>
 								{image.user}
 							</p>
 						</div>
 					</div>
 
 					<div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6'>
-						<div className='bg-white p-6 rounded-lg shadow-md'>
-							<p className='text-gray-600'>Views</p>
-							<p className='text-3xl font-bold text-blue-500'>{image.views}</p>
-						</div>
-						<div className='bg-white p-6 rounded-lg shadow-md'>
-							<p className='text-gray-600'>Likes</p>
-							<p className='text-3xl font-bold text-pink-500'>{image.likes}</p>
-						</div>
-						<div className='bg-white p-6 rounded-lg shadow-md'>
-							<p className='text-gray-600'>Comments</p>
-							<p className='text-3xl font-bold text-green-500'>
-								{image.comments}
-							</p>
-						</div>
-						<div className='bg-white p-6 rounded-lg shadow-md'>
-							<p className='text-gray-600'>Favorites</p>
-							<p className='text-3xl font-bold text-yellow-500'>
-								{image.favorites}
-							</p>
-						</div>
-						<div className='bg-white p-6 rounded-lg shadow-md'>
-							<p className='text-gray-600'>Downloads</p>
-							<p className='text-3xl font-bold text-purple-500'>
-								{image.downloads}
-							</p>
-						</div>
+						{[
+							{ label: 'Views', value: image.views, color: 'green' },
+							{ label: 'Likes', value: image.likes, color: 'green' },
+							{ label: 'Comments', value: image.comments, color: 'green' },
+							{ label: 'Favorites', value: image.collections, color: 'green' },
+							{ label: 'Downloads', value: image.downloads, color: 'green' },
+						].map((item) => (
+							<div
+								key={item.label}
+								className='bg-white dark:bg-gray-900 p-3 rounded-lg shadow-md'
+							>
+								<p className='text-gray-600 dark:text-gray-400'>{item.label}</p>
+								<p
+									className={`text-center text-3xl font-bold text-${item.color}-500`}
+								>
+									{item.value}
+								</p>
+							</div>
+						))}
 					</div>
 				</div>
 			</div>
@@ -180,7 +188,7 @@ const ImageDetailPage: React.FC = () => {
 			<div className='mt-8'>
 				<button
 					onClick={() => window.history.back()}
-					className='bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105'
+					className='bg-blue-500 hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-800 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105'
 				>
 					Back to Search
 				</button>
